@@ -1,0 +1,79 @@
+version: 2
+updates:
+
+  # User Service
+  - package-ecosystem: maven
+    directory: "/services/user-service"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - user-service
+
+  # Journal Service
+  - package-ecosystem: maven
+    directory: "/services/journal-service"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - journal-service
+
+  # Notification Service
+  - package-ecosystem: maven
+    directory: "/services/notification-service"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - notification-service
+
+  # Acceptance tests
+  - package-ecosystem: maven
+    directory: "/bravoscribe-acceptance-tests"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 3
+    labels:
+      - dependencies
+      - testing
+
+  # React web app
+  - package-ecosystem: npm
+    directory: "/frontend-react"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - frontend-react
+
+  # Angular back-office
+  - package-ecosystem: npm
+    directory: "/frontend-angular"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - frontend-angular
+
+  # GitHub Actions
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 3
+    labels:
+      - dependencies
+      - ci-cd
