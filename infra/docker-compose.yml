@@ -1,0 +1,131 @@
+# LOCAL DEVELOPMENT ONLY
+# Cloud credentials managed via Azure Key Vault — see infra/azure/SPEC.md
+#
+# Before starting: copy .env.example to .env and fill in JWT keys:
+#   openssl genrsa -out private.pem 2048
+#   openssl rsa -in private.pem -pubout -out public.pem
+#   Add PEM contents to .env
+
+# Azure DB for PostgreSQL → postgres:17
+# Azure Cache for Redis   → redis:7
+# Azure Event Hubs        → confluentinc/cp-kafka:7.9.0 (Kafka 3.9 — last ZooKeeper version)
+# Azure Cosmos DB MongoDB   → mongo:7
+
+services:
+
+  postgres:
+    container_name: bravoscribe-postgres
+    image: postgres:17
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: journal
+    ports: ["5432:5432"]
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-schemas.sql:/docker-entrypoint-initdb.d/init.sql
+
+  redis:
+    container_name: bravoscribe-redis
+    image: redis:7
+    ports: ["6379:6379"]
+
+  mongo:
+    container_name: bravoscribe-mongo
+    image: mongo:7
+    ports: ["27017:27017"]
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: mongo
+      MONGO_INITDB_ROOT_PASSWORD: mongo
+      MONGO_INITDB_DATABASE: bravoscribe
+    volumes:
+      - mongo_data:/data/db
+
+  zookeeper:
+    container_name: bravoscribe-zookeeper
+    image: confluentinc/cp-zookeeper:7.9.0
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+    ports: ["2181:2181"]
+
+  kafka:
+    container_name: bravoscribe-kafka
+    image: confluentinc/cp-kafka:7.9.0
+    depends_on: [zookeeper]
+    ports: ["9092:9092"]
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      # FIX: use Docker hostname 'kafka' — services connect via Docker network, not localhost
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: bravoscribe-kafka-ui
+    ports: ["8090:8080"]
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+    depends_on: [kafka]
+
+  nginx:
+    container_name: bravoscribe-nginx
+    image: nginx:alpine
+    ports: ["8080:8080"]
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on: []
+
+  user-service:
+    container_name: bravoscribe-user-service
+    profiles: [services]
+    build: ../services/user-service
+    ports: ["8081:8081"]
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/journal?currentSchema=users
+      SPRING_DATASOURCE_USERNAME: user_svc
+      SPRING_DATASOURCE_PASSWORD: user_svc_password
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      # JWT — loaded from .env at runtime via ${} substitution
+      JWT_PRIVATE_KEY: ${JWT_PRIVATE_KEY}
+      JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY}
+      JWT_ACCESS_EXPIRY_SECONDS: 900
+      JWT_REFRESH_EXPIRY_DAYS: 30
+      PASSWORD_RESET_EXPIRY_MINUTES: 15
+    depends_on: [postgres, kafka]
+
+  journal-service:
+    container_name: bravoscribe-journal-service
+    profiles: [services]
+    build: ../services/journal-service
+    ports: ["8082:8082"]
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/journal?currentSchema=journal
+      SPRING_DATASOURCE_USERNAME: journal_svc
+      SPRING_DATASOURCE_PASSWORD: journal_svc_password
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      # JWT — public key only (journal-service never signs tokens)
+      JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY}
+      # Redis — used for @Cacheable stats endpoint (30min TTL)
+      REDIS_URL: redis://redis:6379
+    depends_on: [postgres, kafka, redis]
+
+  notification-service:
+    container_name: bravoscribe-notification-service
+    profiles: [services]
+    build: ../services/notification-service
+    ports: ["8083:8083"]
+    environment:
+      REDIS_URL: redis://redis:6379
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY:-}
+      FROM_EMAIL: ${FROM_EMAIL:-noreply@bravoscribe.com}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+      MONGODB_URI: mongodb://mongo:mongo@mongo:27017/bravoscribe?authSource=admin
+    depends_on: [redis, kafka, mongo]
+
+volumes:
+  postgres_data:
+  mongo_data:

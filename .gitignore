@@ -1,0 +1,41 @@
+# Java
+target/
+*.class
+*.jar
+
+# Maven
+.mvn/
+!.mvn/wrapper/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.DS_Store
+
+# Node
+node_modules/
+dist/
+.angular/
+
+# Android
+*.apk
+*.aab
+local.properties
+.gradle/
+build/
+
+# Secrets — never commit these
+*.env
+.env.*
+!.env.example
+application-local.yml
+application-local.properties
+
+# Logs
+*.log
+
+# Local environment variables — never commit
+.env
+.env.local
+.env.*.local
