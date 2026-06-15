@@ -14,7 +14,7 @@
         <cucumber.version>7.15.0</cucumber.version>
         <rest-assured.version>5.4.0</rest-assured.version>
         <testcontainers.version>1.19.7</testcontainers.version>
-        <junit-platform.version>1.10.2</junit-platform.version>
+        <junit-platform.version>6.1.0</junit-platform.version>
         <junit-jupiter.version>5.10.2</junit-jupiter.version>
         <maven.compiler.source>25</maven.compiler.source>
         <maven.compiler.target>25</maven.compiler.target>
