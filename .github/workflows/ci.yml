@@ -1,0 +1,176 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+
+  # ── User Service ────────────────────────────────────────────────
+  user-service:
+    name: User Service — build + test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check if service exists
+        id: check
+        run: |
+          if [ -f "services/user-service/pom.xml" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set up Java 25
+        if: steps.check.outputs.exists == 'true'
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build and verify (unit + API tests + JaCoCo)
+        if: steps.check.outputs.exists == 'true'
+        working-directory: services/user-service
+        run: ./mvnw clean verify
+
+      - name: Upload JaCoCo report
+        if: steps.check.outputs.exists == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-user-service
+          path: services/user-service/target/site/jacoco/
+          retention-days: 7
+
+  # ── Journal Service ─────────────────────────────────────────────
+  journal-service:
+    name: Journal Service — build + test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check if service exists
+        id: check
+        run: |
+          if [ -f "services/journal-service/pom.xml" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set up Java 25
+        if: steps.check.outputs.exists == 'true'
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build and verify (unit + API tests + JaCoCo)
+        if: steps.check.outputs.exists == 'true'
+        working-directory: services/journal-service
+        run: ./mvnw clean verify
+
+      - name: Upload JaCoCo report
+        if: steps.check.outputs.exists == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-journal-service
+          path: services/journal-service/target/site/jacoco/
+          retention-days: 7
+
+  # ── Notification Service ────────────────────────────────────────
+  notification-service:
+    name: Notification Service — build + test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check if service exists
+        id: check
+        run: |
+          if [ -f "services/notification-service/pom.xml" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set up Java 25
+        if: steps.check.outputs.exists == 'true'
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build and verify (unit + API tests + JaCoCo)
+        if: steps.check.outputs.exists == 'true'
+        working-directory: services/notification-service
+        run: ./mvnw clean verify
+
+      - name: Upload JaCoCo report
+        if: steps.check.outputs.exists == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-notification-service
+          path: services/notification-service/target/site/jacoco/
+          retention-days: 7
+
+  # ── Acceptance Tests ────────────────────────────────────────────
+  # Only runs when all 3 services are implemented (Phase 5+)
+  acceptance-tests:
+    name: Acceptance Tests — cross-service
+    runs-on: ubuntu-latest
+    needs: [user-service, journal-service, notification-service]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check if all services exist
+        id: check
+        run: |
+          if [ -f "services/user-service/pom.xml" ] && \
+             [ -f "services/journal-service/pom.xml" ] && \
+             [ -f "services/notification-service/pom.xml" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set up Java 25
+        if: steps.check.outputs.exists == 'true'
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build service Docker images
+        if: steps.check.outputs.exists == 'true'
+        run: |
+          docker build -t bravoscribe/user-service:test services/user-service
+          docker build -t bravoscribe/journal-service:test services/journal-service
+          docker build -t bravoscribe/notification-service:test services/notification-service
+
+      - name: Run cross-service acceptance tests
+        if: steps.check.outputs.exists == 'true'
+        working-directory: bravoscribe-acceptance-tests
+        run: ./mvnw test
+
+      - name: Upload acceptance test report
+        if: steps.check.outputs.exists == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: acceptance-test-report
+          path: bravoscribe-acceptance-tests/target/cucumber-reports/
+          retention-days: 7

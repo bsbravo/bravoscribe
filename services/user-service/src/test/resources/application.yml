@@ -1,0 +1,14 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: none
+
+jwt:
+  access-expiry-seconds: 900
+  refresh-expiry-days: 30
+  password-reset-expiry-minutes: 15
+
+logging:
+  level:
+    org.flywaydb: DEBUG
+    org.springframework.security: DEBUG

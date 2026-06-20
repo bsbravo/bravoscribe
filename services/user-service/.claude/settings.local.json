@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./mvnw failsafe:integration-test -pl .)",
+      "Bash(jar tf *)",
+      "Bash(jar xf *)",
+      "Bash(javap -c org/springframework/security/web/servlet/util/matcher/PathPatternRequestMatcher.class)",
+      "Bash(javap -c -p org/springframework/security/web/servlet/util/matcher/PathPatternRequestMatcher.class)",
+      "Bash(javap -p -c org/springframework/security/config/annotation/web/AbstractRequestMatcherRegistry.class)",
+      "Bash(./mvnw verify *)",
+      "Bash(./mvnw failsafe:integration-test failsafe:verify -q)",
+      "Bash(xargs grep -l \"Caused by\\\\|BeanCreationException\\\\|Error creating\")",
+      "Read(//c/Users/bruno/.m2/repository/org/springframework/boot/spring-boot-flyway/4.1.0/**)",
+      "Bash(javap -p org/springframework/boot/flyway/autoconfigure/FlywayProperties.class)",
+      "Bash(javap -c org/springframework/boot/flyway/autoconfigure/FlywayProperties.class)",
+      "Bash(./mvnw test-compile *)"
+    ]
+  }
+}
