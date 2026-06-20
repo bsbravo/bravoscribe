@@ -6,6 +6,9 @@ target/
 # Maven
 .mvn/wrapper/maven-wrapper.jar
 
+# Claude Code
+.claude/
+
 # IDE
 .idea/
 *.iml
