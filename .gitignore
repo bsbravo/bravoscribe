@@ -6,8 +6,8 @@ target/
 # Maven
 .mvn/wrapper/maven-wrapper.jar
 
-# Claude Code
-.claude/
+# Claude Code — track shared settings, ignore personal overrides
+.claude/settings.local.json
 
 # IDE
 .idea/
