@@ -4,8 +4,7 @@ target/
 *.jar
 
 # Maven
-.mvn/
-!.mvn/wrapper/
+.mvn/wrapper/maven-wrapper.jar
 
 # IDE
 .idea/
