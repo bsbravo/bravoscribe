@@ -47,7 +47,7 @@ makes practical at a level previously reserved for large engineering teams.
 | Phase | What | Status |
 |---|---|---|
 | 1 | Infrastructure — Docker Compose + nginx | ✅ Done |
-| 2 | User Service — auth, JWT, password reset | 🔧 In progress |
+| 2 | User Service — auth, JWT, password reset | ✅ Done |
 | 3 | Journal Service — entries, tags, export | ⬜ Planned |
 | 4 | Notification Service — email via Kafka | ⬜ Planned |
 | 5 | React Web App | ⬜ Planned |
