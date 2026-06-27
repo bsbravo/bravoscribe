@@ -1,0 +1,14 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: none
+  cache:
+    type: redis
+
+jwt:
+  public-key: placeholder
+
+logging:
+  level:
+    org.flywaydb: DEBUG
+    org.springframework.security: DEBUG

@@ -1,0 +1,47 @@
+#!/bin/sh
+# SPDX-License-Identifier: Apache-2.0
+set -e
+
+# Find project basedir: nearest ancestor directory containing .mvn/
+find_basedir() {
+  dir="$(cd "$(dirname "$0")" && pwd)"
+  while [ "$dir" != "/" ]; do
+    [ -d "$dir/.mvn" ] && printf '%s' "$dir" && return 0
+    dir="$(cd "$dir/.." && pwd)"
+  done
+  printf '%s' "$(cd "$(dirname "$0")" && pwd)"
+}
+
+BASE_DIR="$(find_basedir)"
+WRAPPER_PROPS="$BASE_DIR/.mvn/wrapper/maven-wrapper.properties"
+
+[ -f "$WRAPPER_PROPS" ] || { echo "ERROR: $WRAPPER_PROPS not found." >&2; exit 1; }
+
+DIST_URL="$(grep '^distributionUrl=' "$WRAPPER_PROPS" | cut -d= -f2-)"
+DIST_FILE="$(basename "$DIST_URL")"
+DIST_NAME="${DIST_FILE%.zip}"
+MAVEN_DIR_NAME="${DIST_NAME%-bin}"
+INSTALL_DIR="$HOME/.m2/wrapper/dists/$DIST_NAME"
+MAVEN_HOME="$INSTALL_DIR/$MAVEN_DIR_NAME"
+
+if [ ! -d "$MAVEN_HOME/bin" ]; then
+  echo "Downloading Maven: $DIST_URL" >&2
+  mkdir -p "$INSTALL_DIR"
+  TMP="$INSTALL_DIR/download.zip"
+  if command -v curl >/dev/null 2>&1; then
+    curl -fsSL "$DIST_URL" -o "$TMP"
+  elif command -v wget >/dev/null 2>&1; then
+    wget -q "$DIST_URL" -O "$TMP"
+  else
+    echo "ERROR: curl or wget is required to download Maven." >&2
+    exit 1
+  fi
+  unzip -q "$TMP" -d "$INSTALL_DIR"
+  rm "$TMP"
+fi
+
+JVM_CONFIG=
+[ -f "$BASE_DIR/.mvn/jvm.config" ] && JVM_CONFIG="$(tr -s '\r\n' '  ' < "$BASE_DIR/.mvn/jvm.config")"
+
+# shellcheck disable=SC2086
+exec "$MAVEN_HOME/bin/mvn" $JVM_CONFIG "$@"
