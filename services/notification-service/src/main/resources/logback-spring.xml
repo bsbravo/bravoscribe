@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- JSON structured logs for cloud/production -->
+    <springProfile name="!local">
+        <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+                <includeMdcKeyName>userId</includeMdcKeyName>
+            </encoder>
+        </appender>
+    </springProfile>
+
+    <!-- Human-readable logs for local development -->
+    <springProfile name="local">
+        <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>%d{HH:mm:ss.SSS} [%highlight(%-5level)] [%cyan(%X{userId:-system})] %cyan(%logger{20}) - %msg%n</pattern>
+            </encoder>
+        </appender>
+    </springProfile>
+
+    <root level="INFO">
+        <appender-ref ref="STDOUT"/>
+    </root>
+
+    <logger name="com.bravoscribe" level="DEBUG"/>
+    <logger name="org.springframework.security" level="WARN"/>
+    <logger name="org.springframework.kafka" level="WARN"/>
+
+</configuration>

@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: notification-service
+  kafka:
+    bootstrap-servers: localhost:9092  # placeholder; overridden by @DynamicPropertySource
+    consumer:
+      group-id: notification-service-test
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+  http:
+    client:
+      inet-address-filter:
+        enabled: false
+
+notification:
+  sendgrid:
+    api-key: test-api-key
+  from-email: noreply@bravoscribe.com
+  frontend-url: http://localhost:5173
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
