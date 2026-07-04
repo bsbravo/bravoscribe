@@ -150,13 +150,146 @@ Or use Git Bash where standard curl syntax works without escaping issues.
 
 ## Phase 3 — Journal Service
 
-> _To be added during Phase 3 implementation._
+### L1 — Jackson 2 import instead of Jackson 3
+
+**What happened:** `UserDeactivatedConsumer.java` used
+`com.fasterxml.jackson.databind.ObjectMapper`. Spring Boot 4.1 ships Jackson 3,
+which lives under a different package — the wrong import compiles (both are on
+the classpath transitively) but produces `ClassNotFoundException` at runtime.
+
+**Fix:** Use the Jackson 3 import everywhere:
+```java
+import tools.jackson.databind.ObjectMapper;
+```
+
+---
+
+### L2 — Spring Data Redis 4.x requires an explicit serializer for POJOs
+
+**What happened:** `RedisConfig.java`'s `defaultCacheConfig()` uses
+`DefaultRedisElementWriter`, which fails to serialize plain POJOs/records cached
+via `@Cacheable`.
+
+**Fix:**
+```java
+.serializeValuesWith(SerializationPair.fromSerializer(new JdkSerializationRedisSerializer()))
+```
+The cached type (`StatsResponse`) must also `implements Serializable`.
+
+---
+
+### L3 — Hibernate `lower(bytea)` error on PostgreSQL search query
+
+**What happened:** `JournalEntryRepository.searchEntries`'s JPQL used
+`LOWER(CONCAT('%', :q, '%'))`. Hibernate 6.x sometimes binds a null/long String
+parameter as `bytea`, and Postgres has no `lower(bytea)` overload.
+
+**Fix:** Force the parameter type explicitly in the HQL:
+```
+CAST(:q AS String)
+```
+
+---
+
+### L4 — `@Validated` + `@Size` on `@RequestParam` throws `ConstraintViolationException`
+
+**What happened:** Method-level validation on a controller parameter goes through
+an AOP proxy, which throws `ConstraintViolationException` — not
+`HandlerMethodValidationException`, which is what `@Valid` on a request body throws.
+The existing exception handler only caught the latter, so validation failures
+surfaced as a raw 500.
+
+**Fix:** Add a dedicated handler:
+```java
+@ExceptionHandler(ConstraintViolationException.class)
+```
+to `GlobalExceptionHandler`.
+
+---
+
+### L5 — Misdiagnosed Page response by checking `totalElements` instead of `content`
+
+**What happened:** A search endpoint returning a SQL error (500, from L3) was
+initially misdiagnosed as a `Page<T>` serialization problem because
+`totalElements` came back null/missing in the test assertion.
+
+**Fix:** `totalElements` stays at the JSON root in Spring Data 4.x — unchanged
+from 3.x. Assert on `content` list emptiness instead of `totalElements`; it's a
+more robust signal and won't be misread when the real failure is upstream (a 500).
+
+---
+
+### L6 — Test class package must match the class under test, not its folder
+
+**What happened:** `JournalServiceTest.java` needed access to package-private
+methods on `JournalService`, but lives physically under a `unit/` test folder.
+
+**Fix:** Java resolves visibility by the `package` declaration, not directory
+path — declare the test class in the same package as the class under test even
+when the file sits in a different folder:
+```java
+package com.bravoscribe.journalservice.service;
+```
+
+---
+
+### L7 — Copied `mvnw` wrapper loses its execute bit
+
+**What happened:** Copying `mvnw` from another service (or checking it out on
+Windows) drops the Unix execute permission, so `./mvnw` fails in CI/Docker with
+a permission error even though the file is present and correct.
+
+**Fix:** After copying the Maven wrapper into a new service, immediately run:
+```
+git update-index --chmod=+x <service>/mvnw
+```
+This bit doesn't survive a normal `git add` — it must be set explicitly.
 
 ---
 
 ## Phase 4 — Notification Service
 
-> _To be added during Phase 4 implementation._
+### L1 — Mockito 5 `STRICT_STUBS` makes mocking `RestClient`'s fluent chain painful
+
+**What happened:** `RestClient`'s builder-style API (`.post().uri(...).body(...).retrieve()...`)
+requires stubbing a long chain of intermediate mock objects. Under Mockito 5's
+`STRICT_STUBS`, any unused stub in that chain fails the test with
+`UnnecessaryStubbingException`.
+
+**Fix:** Extract the SendGrid HTTP call behind a small functional interface,
+`SendGridGateway`, and inject that into `NotificationService` instead of the
+`RestClient` directly. Unit tests mock `SendGridGateway` (a single method call)
+instead of the multi-step `RestClient` chain.
+
+---
+
+### L2 — Spring Boot 4.1 ships no Kafka auto-configuration
+
+**What happened:** Unlike earlier Spring Boot versions, adding `spring-kafka`
+alone does not auto-configure a `ConsumerFactory` or listener container — 
+`@KafkaListener` methods silently never fire.
+
+**Fix:** `KafkaConfig.java` must manually declare:
+```java
+@EnableKafka
+// + a ConsumerFactory bean
+// + a ConcurrentKafkaListenerContainerFactory bean
+```
+`KafkaTemplate` (producer side) is only needed in `@TestConfiguration` for test
+message publishing — notification-service has no production producer.
+
+---
+
+### L3 — Redis Testcontainer's default wait strategy races on startup
+
+**What happened:** Integration tests using a plain `GenericContainer<>("redis:7")`
+intermittently failed to connect — the container reported "started" before Redis
+was actually accepting connections.
+
+**Fix:** Use an explicit log-based wait strategy:
+```java
+.waitingFor(Wait.forLogMessage(".*Ready to accept connections.*\\n", 1))
+```
 
 ---
 
