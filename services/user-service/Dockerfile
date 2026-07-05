@@ -3,6 +3,8 @@
 # Stage 1 — Build
 FROM eclipse-temurin:25-jdk AS builder
 WORKDIR /app
+# eclipse-temurin ships neither curl nor wget, but the Maven Wrapper needs one to self-bootstrap
+RUN apt-get update && apt-get install -y --no-install-recommends curl unzip && rm -rf /var/lib/apt/lists/*
 COPY .mvn .mvn
 COPY mvnw pom.xml ./
 RUN ./mvnw dependency:go-offline -q

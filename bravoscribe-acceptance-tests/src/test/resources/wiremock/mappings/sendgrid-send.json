@@ -1,0 +1,12 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPath": "/v3/mail/send"
+  },
+  "response": {
+    "status": 202,
+    "headers": {
+      "X-Message-Id": "wiremock-stub-message-id"
+    }
+  }
+}

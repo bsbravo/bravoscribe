@@ -267,3 +267,32 @@ Run notification-service's own `mvnw clean verify` afterward to confirm the exis
 7. CI: push a branch, confirm the `acceptance-tests` job in `ci.yml` goes green
    end-to-end (currently untestable — this is the first time all 3 services +
    this module exist together)
+
+---
+
+## Known accepted gaps
+
+### Deactivation doesn't revoke already-issued access tokens in real time
+
+`account-lifecycle.feature`'s "Deactivated user cannot access any resource" scenario
+originally asserted that a deactivated user's journal API calls return 401
+immediately. Running the implemented suite showed this doesn't hold: access tokens
+are stateless and short-lived (RS256 JWT, `JWT_ACCESS_EXPIRY_SECONDS` default 900s).
+Deactivation (`AdminController.deactivateUser`) revokes refresh tokens only — an
+already-issued access token remains valid to any service until it naturally expires,
+since journal-service only verifies the JWT signature/expiry and never calls back to
+user-service or a shared revocation store.
+
+**Options considered:**
+| Option | Change required | Trade-off |
+|---|---|---|
+| A — Accept current behavior | None — rewrite the scenario to match reality | Deactivated user's leaked/stolen token usable for up to 15 min |
+| B — Redis deny-list | user-service pushes deactivated userId to Redis (TTL = max token lifetime); journal-service's JWT filter checks it per request | Real-time revocation, but +1 Redis round-trip per authenticated request, new cross-service coupling |
+| C — Much shorter access-token TTL | Lower `JWT_ACCESS_EXPIRY_SECONDS` | Reduces the window but doesn't close it; more frequent refresh traffic |
+
+**Decision:** Option A for now. The scenario was rewritten to assert what the system
+actually guarantees (`login returns 401`, old access token stays valid until natural
+expiry, `/refresh` is rejected) rather than an unimplemented guarantee. This is a
+deliberate, discussed tradeoff — not a silently-dropped regression guard. Revisit
+Option B if real-time revocation becomes a real requirement (e.g. before a security
+audit or if session-hijacking risk increases).

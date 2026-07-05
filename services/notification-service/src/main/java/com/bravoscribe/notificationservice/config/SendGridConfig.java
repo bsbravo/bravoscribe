@@ -18,10 +18,13 @@ public class SendGridConfig {
     @Value("${notification.from-email}")
     private String fromEmail;
 
+    @Value("${notification.sendgrid.base-url:https://api.sendgrid.com}")
+    private String baseUrl;
+
     @Bean
     public RestClient sendGridClient() {
         return RestClient.builder()
-            .baseUrl("https://api.sendgrid.com")
+            .baseUrl(baseUrl)
             .defaultHeader("Authorization", "Bearer " + apiKey)
             .defaultHeader("Content-Type", "application/json")
             .build();

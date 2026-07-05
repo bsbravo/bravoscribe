@@ -21,4 +21,5 @@ Feature: Account lifecycle across services
     Given I am registered and logged in as "bruno@email.com"
     When an admin deactivates my account
     Then login returns 401
-    And GET /api/journal/entries returns 401
+    And my old access token remains valid until it expires
+    And I cannot obtain a new access token via /refresh

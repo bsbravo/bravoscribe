@@ -10,31 +10,23 @@
 
     <properties>
         <java.version>25</java.version>
-        <spring-boot.version>4.1.0</spring-boot.version>
         <cucumber.version>7.15.0</cucumber.version>
-        <rest-assured.version>5.4.0</rest-assured.version>
-        <testcontainers.version>1.19.7</testcontainers.version>
+        <rest-assured.version>6.0.0</rest-assured.version>
+        <testcontainers.version>1.21.4</testcontainers.version>
         <junit-platform.version>1.10.2</junit-platform.version>
         <junit-jupiter.version>5.10.2</junit-jupiter.version>
+        <nimbus-jose-jwt.version>10.9</nimbus-jose-jwt.version>
+        <assertj.version>3.27.7</assertj.version>
+        <awaitility.version>4.2.2</awaitility.version>
+        <mongodb-driver.version>5.8.0</mongodb-driver.version>
+        <postgresql.version>42.7.4</postgresql.version>
+        <jackson.version>2.21.4</jackson.version>
+        <surefire.version>3.5.3</surefire.version>
         <maven.compiler.source>25</maven.compiler.source>
         <maven.compiler.target>25</maven.compiler.target>
     </properties>
 
     <dependencies>
-        <!-- Spring Boot Test — required for @TestConfiguration -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-test</artifactId>
-            <version>${spring-boot.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-test</artifactId>
-            <!-- version managed by spring-boot-test BOM — do not pin separately -->
-            <scope>test</scope>
-        </dependency>
-
         <!-- Cucumber -->
         <dependency>
             <groupId>io.cucumber</groupId>
@@ -44,13 +36,15 @@
         </dependency>
         <dependency>
             <groupId>io.cucumber</groupId>
-            <artifactId>cucumber-spring</artifactId>
+            <artifactId>cucumber-junit-platform-engine</artifactId>
             <version>${cucumber.version}</version>
             <scope>test</scope>
         </dependency>
+        <!-- No Spring context in this module (services run as black-box containers) —
+             PicoContainer DI shares TestContext across step-definition classes per scenario -->
         <dependency>
             <groupId>io.cucumber</groupId>
-            <artifactId>cucumber-junit-platform-engine</artifactId>
+            <artifactId>cucumber-picocontainer</artifactId>
             <version>${cucumber.version}</version>
             <scope>test</scope>
         </dependency>
@@ -60,6 +54,13 @@
             <groupId>io.rest-assured</groupId>
             <artifactId>rest-assured</artifactId>
             <version>${rest-assured.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- Rest Assured has no bundled JSON serializer — needed to send Map-based request bodies -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson.version}</version>
             <scope>test</scope>
         </dependency>
 
@@ -80,6 +81,51 @@
             <groupId>org.testcontainers</groupId>
             <artifactId>kafka</artifactId>
             <version>${testcontainers.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>mongodb</artifactId>
+            <version>${testcontainers.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- MongoDB driver — direct email_logs assertions, no Spring Data here -->
+        <dependency>
+            <groupId>org.mongodb</groupId>
+            <artifactId>mongodb-driver-sync</artifactId>
+            <version>${mongodb-driver.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- PostgreSQL JDBC driver — direct soft-delete assertions, no Spring Data here -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>${postgresql.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Nimbus JOSE+JWT — generates the shared RSA keypair for all 3 services
+             and mints an ADMIN-role token directly (no self-service admin creation endpoint exists) -->
+        <dependency>
+            <groupId>com.nimbusds</groupId>
+            <artifactId>nimbus-jose-jwt</artifactId>
+            <version>${nimbus-jose-jwt.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>${assertj.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- Polls for eventually-consistent state — e.g. the "within 5 seconds" Kafka-driven soft-delete scenario -->
+        <dependency>
+            <groupId>org.awaitility</groupId>
+            <artifactId>awaitility</artifactId>
+            <version>${awaitility.version}</version>
             <scope>test</scope>
         </dependency>
 
@@ -104,4 +150,21 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Default surefire include pattern (*Test.java) doesn't match CucumberRunner.java —
+                 include it explicitly so `mvn test` actually runs the suite. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${surefire.version}</version>
+                <configuration>
+                    <includes>
+                        <include>**/CucumberRunner.java</include>
+                    </includes>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>
