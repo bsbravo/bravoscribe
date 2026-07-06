@@ -19,7 +19,7 @@
         <assertj.version>3.27.7</assertj.version>
         <awaitility.version>4.2.2</awaitility.version>
         <mongodb-driver.version>5.8.0</mongodb-driver.version>
-        <postgresql.version>42.7.4</postgresql.version>
+        <postgresql.version>42.7.12</postgresql.version>
         <jackson.version>2.21.4</jackson.version>
         <surefire.version>3.5.3</surefire.version>
         <maven.compiler.source>25</maven.compiler.source>
