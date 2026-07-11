@@ -6,7 +6,9 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "jest"
+    "test": "jest",
+    "test:e2e": "playwright test",
+    "typecheck:e2e": "tsc -p e2e/tsconfig.json"
   },
   "private": true,
   "packageManager": "npm@10.9.8",
@@ -32,12 +34,15 @@
     "@angular/cli": "^22.0.6",
     "@angular/compiler-cli": "^22.0.0",
     "@angular/platform-browser-dynamic": "^22.0.6",
+    "@playwright/test": "^1.61.1",
     "@testing-library/angular": "^19.4.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@types/jest": "^30.0.0",
+    "@types/pg": "^8.20.0",
     "jest": "^30.4.2",
     "jest-environment-jsdom": "^30.4.1",
     "jest-preset-angular": "^15.0.3",
+    "pg": "^8.22.0",
     "prettier": "^3.8.1",
     "typescript": "~6.0.2"
   }
