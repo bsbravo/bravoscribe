@@ -1,0 +1,7 @@
+@if ((status$ | async) === 'checking') {
+  <div class="boot-check">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+} @else {
+  <router-outlet></router-outlet>
+}

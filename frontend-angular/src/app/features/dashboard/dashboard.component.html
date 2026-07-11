@@ -1,0 +1,34 @@
+<h1>Dashboard</h1>
+
+@if (loading$ | async) {
+  <div class="loading">
+    <mat-spinner diameter="32"></mat-spinner>
+  </div>
+}
+
+<div class="stats-grid">
+  <mat-card class="stat-card">
+    <mat-card-content>
+      <div class="stat-value">{{ (totalUsers$ | async) ?? 0 }}</div>
+      <div class="stat-label">Total users</div>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card class="stat-card">
+    <mat-card-content>
+      <div class="stat-value">{{ (newThisWeek$ | async) ?? 0 }}</div>
+      <div class="stat-label">New users this week</div>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card class="stat-card">
+    <mat-card-content>
+      <div class="stat-value">{{ (deactivated$ | async) ?? 0 }}</div>
+      <div class="stat-label">Deactivated accounts</div>
+    </mat-card-content>
+  </mat-card>
+</div>
+
+@if ((totalUsers$ | async) === 0 && (loading$ | async) === false) {
+  <p class="empty-state">No users registered yet</p>
+}

@@ -1,0 +1,50 @@
+.back-link {
+  display: inline-block;
+  margin-bottom: 16px;
+  color: var(--mat-sys-primary);
+  text-decoration: none;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
+
+.detail-card {
+  max-width: 480px;
+}
+
+.detail-list {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px 16px;
+  margin: 0;
+}
+
+.detail-list dt {
+  font-weight: 600;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.detail-list dd {
+  margin: 0;
+}
+
+.chip-active {
+  background-color: var(--mat-sys-tertiary-container);
+  color: var(--mat-sys-on-tertiary-container);
+}
+
+.chip-inactive {
+  background-color: var(--mat-sys-error-container);
+  color: var(--mat-sys-on-error-container);
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: 24px;
+}
+
+.empty-state {
+  color: var(--mat-sys-on-surface-variant);
+}

@@ -1,0 +1,9 @@
+<h2 mat-dialog-title>Deactivate this account?</h2>
+<mat-dialog-content>
+  The user will be immediately logged out and will not be able to log in again. This action
+  cannot be undone.
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Cancel</button>
+  <button mat-flat-button color="warn" (click)="confirm()">Deactivate</button>
+</mat-dialog-actions>

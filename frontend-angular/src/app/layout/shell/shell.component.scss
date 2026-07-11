@@ -1,0 +1,30 @@
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.brand {
+  font-weight: 600;
+  margin-right: 24px;
+}
+
+.nav-links {
+  display: flex;
+  gap: 4px;
+}
+
+.active-link {
+  font-weight: 600;
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+.content {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px;
+  box-sizing: border-box;
+}

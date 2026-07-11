@@ -1,0 +1,38 @@
+.search-field {
+  width: 100%;
+  max-width: 360px;
+  margin-bottom: 8px;
+}
+
+.users-table {
+  width: 100%;
+}
+
+.user-row {
+  cursor: pointer;
+}
+
+.user-row:hover {
+  background-color: var(--mat-sys-surface-container-high);
+}
+
+.chip-active {
+  background-color: var(--mat-sys-tertiary-container);
+  color: var(--mat-sys-on-tertiary-container);
+}
+
+.chip-inactive {
+  background-color: var(--mat-sys-error-container);
+  color: var(--mat-sys-on-error-container);
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: 24px;
+}
+
+.empty-state {
+  padding: 16px 0;
+  color: var(--mat-sys-on-surface-variant);
+}
