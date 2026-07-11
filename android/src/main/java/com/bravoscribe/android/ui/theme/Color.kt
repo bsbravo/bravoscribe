@@ -18,6 +18,7 @@ val Teal = Color(0xFF2D6A4F)
 val TealLight = Color(0xFFD8F3DC)
 val Border = Color(0xFFDDD5C0)
 val Rust = Color(0xFF993C1D)
+val RustLight = Color(0xFFF5DCD3)
 
 // Chronicle palette (dark) — FFT-inspired midnight blue + gold.
 val ChronicleDeep = Color(0xFF080B18)
@@ -27,6 +28,7 @@ val ChronicleCream = Color(0xFFE8DFC8)
 val ChronicleDim = Color(0xFFB8AD96)
 val ChronicleTeal = Color(0xFF2A8A7A)
 val ChronicleRuby = Color(0xFFA83040)
+val ChronicleRubyContainer = Color(0xFF3A1620)
 val ChronicleBorder = Color(0xFF3A4A70)
 
 // Mood indicator colors — used as a left border on entry cards (matches React/Angular).

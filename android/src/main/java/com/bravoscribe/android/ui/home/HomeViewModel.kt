@@ -2,6 +2,7 @@ package com.bravoscribe.android.ui.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bravoscribe.android.data.local.ConnectivityObserver
 import com.bravoscribe.android.domain.model.JournalEntry
 import com.bravoscribe.android.domain.model.Mood
 import com.bravoscribe.android.domain.model.Tag
@@ -14,6 +15,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
@@ -37,6 +41,7 @@ data class HomeUiState(
     val isSaving: Boolean = false,
     val streakDays: List<StreakDay> = emptyList(),
     val currentStreak: Int = 0,
+    val isOffline: Boolean = false,
     val snackbarMessage: String? = null,
 ) {
     val isSaved: Boolean get() = entryId != null && !isDirty
@@ -45,6 +50,7 @@ data class HomeUiState(
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val journalRepository: JournalRepository,
+    connectivityObserver: ConnectivityObserver,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -58,6 +64,19 @@ class HomeViewModel @Inject constructor(
             .launchIn(viewModelScope)
 
         viewModelScope.launch { journalRepository.refreshTags() }
+
+        val isOnline = connectivityObserver.isOnline.distinctUntilChanged()
+        isOnline
+            .onEach { online -> _uiState.update { it.copy(isOffline = !online) } }
+            .launchIn(viewModelScope)
+        isOnline
+            .drop(1)
+            .filter { online -> online }
+            .onEach {
+                journalRepository.syncPendingWrites()
+                loadToday()
+            }
+            .launchIn(viewModelScope)
 
         loadToday()
     }

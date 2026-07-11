@@ -39,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.bravoscribe.android.ui.components.MoodPicker
+import com.bravoscribe.android.ui.components.OfflineBanner
 import com.bravoscribe.android.ui.components.SaveStatusPill
 import com.bravoscribe.android.ui.components.StreakBar
 import com.bravoscribe.android.ui.components.StreakDay
@@ -78,22 +79,25 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { padding ->
-        Box(modifier = Modifier.padding(padding).fillMaxSize()) {
-            when {
-                uiState.isLoading -> {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
+        Column(modifier = Modifier.padding(padding).fillMaxSize()) {
+            if (uiState.isOffline) OfflineBanner()
+            Box(modifier = Modifier.weight(1f)) {
+                when {
+                    uiState.isLoading -> {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator()
+                        }
                     }
-                }
-                !uiState.isEditorOpen -> {
-                    EmptyHomeState(
-                        streakDays = uiState.streakDays,
-                        currentStreak = uiState.currentStreak,
-                        onStartWriting = viewModel::startWriting,
-                    )
-                }
-                else -> {
-                    EditorHomeState(uiState = uiState, viewModel = viewModel)
+                    !uiState.isEditorOpen -> {
+                        EmptyHomeState(
+                            streakDays = uiState.streakDays,
+                            currentStreak = uiState.currentStreak,
+                            onStartWriting = viewModel::startWriting,
+                        )
+                    }
+                    else -> {
+                        EditorHomeState(uiState = uiState, viewModel = viewModel)
+                    }
                 }
             }
         }

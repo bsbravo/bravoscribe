@@ -30,6 +30,8 @@ private val LightWarmColorScheme = lightColorScheme(
     outlineVariant = Parchment3,
     error = Rust,
     onError = Parchment,
+    errorContainer = RustLight,
+    onErrorContainer = Rust,
 )
 
 private val DarkChronicleColorScheme = darkColorScheme(
@@ -49,6 +51,8 @@ private val DarkChronicleColorScheme = darkColorScheme(
     outlineVariant = ChronicleBorder,
     error = ChronicleRuby,
     onError = ChronicleCream,
+    errorContainer = ChronicleRubyContainer,
+    onErrorContainer = ChronicleCream,
 )
 
 /** Streak/editing-context accent — outside Material3's standard ColorScheme slots. */

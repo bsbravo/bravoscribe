@@ -2,6 +2,7 @@ package com.bravoscribe.android.ui.entries.list
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bravoscribe.android.data.local.ConnectivityObserver
 import com.bravoscribe.android.domain.model.JournalEntry
 import com.bravoscribe.android.domain.repository.JournalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -14,6 +15,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -30,6 +33,7 @@ data class EntriesListUiState(
     val searchExpanded: Boolean = false,
     val searchQuery: String = "",
     val entries: List<JournalEntry> = emptyList(),
+    val isOffline: Boolean = false,
     val snackbarMessage: String? = null,
     val snackbarShowUndo: Boolean = false,
 )
@@ -38,6 +42,7 @@ data class EntriesListUiState(
 @HiltViewModel
 class EntriesListViewModel @Inject constructor(
     private val journalRepository: JournalRepository,
+    connectivityObserver: ConnectivityObserver,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(EntriesListUiState())
@@ -59,6 +64,19 @@ class EntriesListViewModel @Inject constructor(
             .onEach { entries ->
                 val hiddenIds = pendingDeletes.keys
                 _uiState.update { it.copy(entries = entries.filterNot { e -> e.id in hiddenIds }) }
+            }
+            .launchIn(viewModelScope)
+
+        val isOnline = connectivityObserver.isOnline.distinctUntilChanged()
+        isOnline
+            .onEach { online -> _uiState.update { it.copy(isOffline = !online) } }
+            .launchIn(viewModelScope)
+        isOnline
+            .drop(1)
+            .filter { online -> online }
+            .onEach {
+                journalRepository.syncPendingWrites()
+                journalRepository.refreshEntries()
             }
             .launchIn(viewModelScope)
     }

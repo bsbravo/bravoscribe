@@ -52,6 +52,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.bravoscribe.android.domain.model.JournalEntry
 import com.bravoscribe.android.domain.model.emoji
 import com.bravoscribe.android.ui.components.MoodColorBar
+import com.bravoscribe.android.ui.components.OfflineBanner
 import com.bravoscribe.android.ui.components.ShimmerEntryCard
 import com.bravoscribe.android.ui.export.ExportBottomSheet
 import com.bravoscribe.android.ui.util.displayTitle
@@ -112,41 +113,44 @@ fun EntriesListScreen(
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { padding ->
-        PullToRefreshBox(
-            isRefreshing = uiState.isRefreshing,
-            onRefresh = viewModel::refresh,
-            modifier = Modifier.padding(padding).fillMaxSize(),
-        ) {
-            when {
-                uiState.isLoading -> {
-                    Column(
-                        modifier = Modifier.fillMaxSize().padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        repeat(3) { ShimmerEntryCard() }
+        Column(modifier = Modifier.padding(padding).fillMaxSize()) {
+            if (uiState.isOffline) OfflineBanner()
+            PullToRefreshBox(
+                isRefreshing = uiState.isRefreshing,
+                onRefresh = viewModel::refresh,
+                modifier = Modifier.weight(1f).fillMaxSize(),
+            ) {
+                when {
+                    uiState.isLoading -> {
+                        Column(
+                            modifier = Modifier.fillMaxSize().padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            repeat(3) { ShimmerEntryCard() }
+                        }
                     }
-                }
-                uiState.entries.isEmpty() && uiState.searchQuery.isNotBlank() -> {
-                    EmptyState(
-                        icon = Icons.Default.Search,
-                        message = "No entries found for '${uiState.searchQuery}'",
-                    )
-                }
-                uiState.entries.isEmpty() -> {
-                    EmptyState(icon = Icons.Default.Search, message = "No entries yet")
-                }
-                else -> {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        items(uiState.entries, key = { it.id }) { entry ->
-                            EntryCard(
-                                entry = entry,
-                                onClick = { onEntryClick(entry.id) },
-                                onDelete = { viewModel.deleteEntry(entry) },
-                            )
+                    uiState.entries.isEmpty() && uiState.searchQuery.isNotBlank() -> {
+                        EmptyState(
+                            icon = Icons.Default.Search,
+                            message = "No entries found for '${uiState.searchQuery}'",
+                        )
+                    }
+                    uiState.entries.isEmpty() -> {
+                        EmptyState(icon = Icons.Default.Search, message = "No entries yet")
+                    }
+                    else -> {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            items(uiState.entries, key = { it.id }) { entry ->
+                                EntryCard(
+                                    entry = entry,
+                                    onClick = { onEntryClick(entry.id) },
+                                    onDelete = { viewModel.deleteEntry(entry) },
+                                )
+                            }
                         }
                     }
                 }
