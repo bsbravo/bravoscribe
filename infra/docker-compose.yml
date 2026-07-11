@@ -95,6 +95,11 @@ services:
     ports: ["8080:8080"]
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    # host.docker.internal resolves automatically on Docker Desktop (Windows/Mac).
+    # Plain Docker Engine on Linux (e.g. GitHub Actions runners) needs this explicit
+    # mapping — required for CI, harmless no-op locally.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on: []
 
   user-service:

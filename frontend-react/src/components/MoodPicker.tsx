@@ -16,6 +16,7 @@ export function MoodPicker({ value, onChange }: MoodPickerProps) {
           type="button"
           role="radio"
           aria-checked={value === mood}
+          aria-label={MOOD_LABEL[mood]}
           title={MOOD_LABEL[mood]}
           onClick={() => onChange(mood)}
           className={cn(
