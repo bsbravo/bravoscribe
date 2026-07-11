@@ -175,10 +175,10 @@ jobs:
           path: bravoscribe-acceptance-tests/target/cucumber-reports/
           retention-days: 7
 
-  # ── Frontend — build, lint, unit tests ──────────────────────────
+  # ── React Web App — build, lint, unit tests ─────────────────────
   # Independent of the backend — runs in parallel with everything else.
-  frontend-unit:
-    name: Frontend — build, lint, unit tests
+  react-unit:
+    name: React Web App — build, lint, unit tests
     runs-on: ubuntu-latest
 
     steps:
@@ -227,13 +227,13 @@ jobs:
         working-directory: frontend-react
         run: npm run build
 
-  # ── Frontend E2E ─────────────────────────────────────────────────
+  # ── React Web App — E2E ──────────────────────────────────────────
   # Gated on acceptance-tests: no point spinning up a full docker-compose
   # stack + browser if the backend's own tests already failed. Provisions a
   # fresh, isolated stack for this job only — nothing shared with any other
   # job (same isolation principle as the Testcontainers-based Java suites).
-  frontend-e2e:
-    name: Frontend — E2E (Playwright)
+  react-e2e:
+    name: React Web App — E2E (Playwright)
     runs-on: ubuntu-latest
     needs: [acceptance-tests]
 
@@ -341,10 +341,10 @@ jobs:
         working-directory: infra
         run: docker compose --profile services down -v
 
-  # ── Angular Admin — build + unit tests ──────────────────────────
+  # ── Angular Back-office — build + unit tests ────────────────────
   # Independent of the backend — runs in parallel with everything else.
   angular-unit:
-    name: Angular Admin — build + unit tests
+    name: Angular Back-office — build + unit tests
     runs-on: ubuntu-latest
 
     steps:
