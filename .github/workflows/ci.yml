@@ -340,3 +340,45 @@ jobs:
         if: always() && steps.check.outputs.exists == 'true'
         working-directory: infra
         run: docker compose --profile services down -v
+
+  # ── Angular Admin — build + unit tests ──────────────────────────
+  # Independent of the backend — runs in parallel with everything else.
+  angular-unit:
+    name: Angular Admin — build + unit tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Check if frontend-angular exists
+        id: check
+        run: |
+          if [ -f "frontend-angular/package.json" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set up Node 22
+        if: steps.check.outputs.exists == 'true'
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend-angular/package-lock.json
+
+      - name: Install dependencies
+        if: steps.check.outputs.exists == 'true'
+        working-directory: frontend-angular
+        run: npm ci
+
+      - name: Build
+        if: steps.check.outputs.exists == 'true'
+        working-directory: frontend-angular
+        run: npm run build
+
+      - name: Unit tests
+        if: steps.check.outputs.exists == 'true'
+        working-directory: frontend-angular
+        run: npm run test
