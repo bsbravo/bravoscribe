@@ -5,6 +5,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.ui.graphics.Color
 
 private val LightWarmColorScheme = lightColorScheme(
     primary = Accent,
@@ -48,15 +51,41 @@ private val DarkChronicleColorScheme = darkColorScheme(
     onError = ChronicleCream,
 )
 
+/** Streak/editing-context accent — outside Material3's standard ColorScheme slots. */
+data class BravoscribeExtraColors(
+    val streak: Color,
+    val streakContainer: Color,
+)
+
+private val LightExtraColors = BravoscribeExtraColors(
+    streak = StreakPurple,
+    streakContainer = StreakPurpleLight,
+)
+
+private val ChronicleExtraColors = BravoscribeExtraColors(
+    streak = StreakPurpleChronicle,
+    streakContainer = StreakPurpleChronicleContainer,
+)
+
+private val LocalBravoscribeExtraColors = compositionLocalOf { LightExtraColors }
+
+object BravoscribeExtras {
+    val colors: BravoscribeExtraColors
+        @Composable get() = LocalBravoscribeExtraColors.current
+}
+
 @Composable
 fun BravoscribeTheme(
     isDark: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit,
 ) {
     val colorScheme = if (isDark) DarkChronicleColorScheme else LightWarmColorScheme
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = BravoscribeTypography,
-        content = content,
-    )
+    val extraColors = if (isDark) ChronicleExtraColors else LightExtraColors
+    CompositionLocalProvider(LocalBravoscribeExtraColors provides extraColors) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = BravoscribeTypography,
+            content = content,
+        )
+    }
 }

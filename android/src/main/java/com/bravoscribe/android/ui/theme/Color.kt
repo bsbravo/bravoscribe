@@ -35,3 +35,11 @@ val MoodGood = Gold
 val MoodNeutral = Border
 val MoodBad = Gold
 val MoodTerrible = Rust
+
+// Streak / editing-context accent — distinct from the theme's primary/secondary,
+// used for the streak bar squares, "saved" pill, and the past-entry-editing banner
+// (see android/SPEC.md's "purple" callouts in the Screen designs section).
+val StreakPurple = Color(0xFF6B4FA0)
+val StreakPurpleLight = Color(0xFFE8E0F5)
+val StreakPurpleChronicle = Color(0xFFA593E0)
+val StreakPurpleChronicleContainer = Color(0xFF241C3D)
