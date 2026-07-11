@@ -1,0 +1,191 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+/* Chronicle (dark) theme activates when data-theme="chronicle" is on any ancestor */
+@custom-variant dark (&:where([data-theme="chronicle"], [data-theme="chronicle"] *));
+
+:root {
+  --radius: 0.75rem;
+
+  /* Warm theme (default) — parchment, ink, leather */
+  --ink: #2c1a0e;
+  --ink-2: #5c3d1e;
+  --ink-3: #6b4226;
+  --ink-4: #c4a882;
+
+  --parchment: #fdfaf3;
+  --parchment-2: #f5f0e8;
+  --parchment-3: #ede5d4;
+
+  --accent: #8b4513;
+  --accent-light: #f2e4d4;
+
+  --gold: #c17d52;
+  --gold-light: #faeeda;
+
+  --teal: #2d6a4f;
+  --teal-light: #d8f3dc;
+
+  --rust: #993c1d;
+
+  --border-color: #ddd5c0;
+
+  /* Semantic aliases — these are what @theme maps into Tailwind utilities */
+  --background: var(--parchment);
+  --foreground: var(--ink);
+  --card: var(--parchment);
+  --card-foreground: var(--ink);
+  --popover: var(--parchment);
+  --popover-foreground: var(--ink);
+  --primary: var(--accent);
+  --primary-foreground: #fdfaf3;
+  --secondary: var(--parchment-2);
+  --secondary-foreground: var(--ink);
+  --muted: var(--parchment-2);
+  --muted-foreground: var(--ink-3);
+  --accent-surface: var(--accent);
+  --accent-surface-foreground: #fdfaf3;
+  --destructive: var(--rust);
+  --destructive-foreground: #fdfaf3;
+  --border: var(--border-color);
+  --input: var(--border-color);
+  --ring: var(--accent);
+}
+
+[data-theme="chronicle"] {
+  --chronicle-bg: #080b18;
+  --chronicle-panel: #0d1128;
+  --chronicle-panel-2: #141a3a;
+  --chronicle-gold: #c8a84b;
+  --chronicle-gold-light: rgba(200, 168, 75, 0.18);
+  --chronicle-cream: #e8dfc8;
+  --chronicle-dim: #b8ad96;
+  --chronicle-teal: #2a8a7a;
+  --chronicle-teal-light: rgba(42, 138, 122, 0.18);
+  --chronicle-ruby: #a83040;
+  --chronicle-ruby-light: rgba(168, 48, 64, 0.18);
+  --chronicle-border: #3a4a70;
+
+  /* Override the raw brand tokens too — most components reference these
+     directly (bg-parchment-2, text-ink-3, ...) rather than the semantic
+     aliases below, so the aliases alone aren't enough to re-theme the app. */
+  --ink: var(--chronicle-cream);
+  --ink-2: var(--chronicle-cream);
+  --ink-3: var(--chronicle-dim);
+  --ink-4: var(--chronicle-dim);
+  --parchment: var(--chronicle-bg);
+  --parchment-2: var(--chronicle-panel);
+  --parchment-3: var(--chronicle-panel-2);
+  --accent: var(--chronicle-gold);
+  --accent-light: var(--chronicle-gold-light);
+  --gold: var(--chronicle-gold);
+  --gold-light: var(--chronicle-gold-light);
+  --teal: var(--chronicle-teal);
+  --teal-light: var(--chronicle-teal-light);
+  --rust: var(--chronicle-ruby);
+  --border-color: var(--chronicle-border);
+
+  --background: var(--chronicle-bg);
+  --foreground: var(--chronicle-cream);
+  --card: var(--chronicle-panel);
+  --card-foreground: var(--chronicle-cream);
+  --popover: var(--chronicle-panel);
+  --popover-foreground: var(--chronicle-cream);
+  --primary: var(--chronicle-gold);
+  --primary-foreground: var(--chronicle-bg);
+  --secondary: var(--chronicle-panel);
+  --secondary-foreground: var(--chronicle-cream);
+  --muted: var(--chronicle-panel);
+  --muted-foreground: var(--chronicle-dim);
+  --accent-surface: var(--chronicle-gold);
+  --accent-surface-foreground: var(--chronicle-bg);
+  --destructive: var(--chronicle-ruby);
+  --destructive-foreground: var(--chronicle-cream);
+  --border: var(--chronicle-border);
+  --input: var(--chronicle-border);
+  --ring: var(--chronicle-gold);
+}
+
+@theme inline {
+  --font-serif: "Lora", Georgia, serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  /* shadcn's generic "accent" = hover/highlight surface, distinct from our brand accent below */
+  --color-accent: var(--accent-surface);
+  --color-accent-foreground: var(--accent-surface-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Brand tokens — always usable directly (e.g. text-ink-3, bg-parchment-2) */
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-ink-4: var(--ink-4);
+  --color-parchment: var(--parchment);
+  --color-parchment-2: var(--parchment-2);
+  --color-parchment-3: var(--parchment-3);
+  --color-brand-accent: var(--accent);
+  --color-accent-light: var(--accent-light);
+  --color-gold: var(--gold);
+  --color-gold-light: var(--gold-light);
+  --color-teal: var(--teal);
+  --color-teal-light: var(--teal-light);
+
+  /* Chronicle tokens exposed directly for one-off usage */
+  --color-chronicle-bg: #080b18;
+  --color-chronicle-panel: #0d1128;
+  --color-chronicle-gold: #c8a84b;
+  --color-chronicle-cream: #e8dfc8;
+  --color-chronicle-dim: #b8ad96;
+  --color-chronicle-teal: #2a8a7a;
+  --color-chronicle-ruby: #a83040;
+  --color-chronicle-border: #3a4a70;
+
+  /* Mood indicator colors — used as a left-border on entry cards */
+  --color-mood-great: #2d6a4f;
+  --color-mood-good: #c17d52;
+  --color-mood-neutral: #ddd5c0;
+  --color-mood-bad: #c17d52;
+  --color-mood-terrible: #993c1d;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    color-scheme: light;
+  }
+
+  [data-theme="chronicle"] body {
+    color-scheme: dark;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-serif;
+  }
+}
