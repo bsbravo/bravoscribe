@@ -4,8 +4,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Book
-import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -31,8 +31,8 @@ import com.bravoscribe.android.ui.theme.BravoscribeTheme
 private data class BottomNavItem(val route: String, val label: String, val icon: ImageVector)
 
 private val bottomNavItems = listOf(
-    BottomNavItem(Routes.HOME, "Today", Icons.Filled.Home),
-    BottomNavItem(Routes.ENTRIES, "Entries", Icons.Filled.Book),
+    BottomNavItem(Routes.HOME, "Today", Icons.Filled.Edit),
+    BottomNavItem(Routes.ENTRIES, "Entries", Icons.Filled.CalendarMonth),
     BottomNavItem(Routes.PROFILE, "Profile", Icons.Filled.Person),
 )
 

@@ -48,13 +48,11 @@ fun BravoscribeNavHost(
             route = Routes.RESET_PASSWORD,
             arguments = listOf(navArgument("token") { type = NavType.StringType }),
             deepLinks = listOf(navDeepLink { uriPattern = "bravoscribe://reset-password/{token}" }),
-        ) { backStackEntry ->
-            val token = backStackEntry.arguments?.getString("token").orEmpty()
+        ) {
             ResetPasswordScreen(
-                token = token,
                 onResetSuccess = {
                     navController.navigate(Routes.LOGIN) {
-                        popUpTo(Routes.LOGIN) { inclusive = true }
+                        popUpTo(0) { inclusive = true }
                     }
                 },
             )
