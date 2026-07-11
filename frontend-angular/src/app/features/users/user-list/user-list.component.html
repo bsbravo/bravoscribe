@@ -1,0 +1,69 @@
+<h1>Users</h1>
+
+<mat-form-field appearance="outline" class="search-field">
+  <mat-label>Search this page</mat-label>
+  <input
+    matInput
+    [ngModel]="searchTerm$ | async"
+    (ngModelChange)="onSearchChange($event)"
+    placeholder="Name or email"
+  />
+  <mat-icon matSuffix>search</mat-icon>
+</mat-form-field>
+
+@if (loading$ | async) {
+  <div class="loading">
+    <mat-spinner diameter="32"></mat-spinner>
+  </div>
+} @else {
+  <table mat-table [dataSource]="(users$ | async) ?? []" class="users-table">
+    <ng-container matColumnDef="name">
+      <th mat-header-cell *matHeaderCellDef>Name</th>
+      <td mat-cell *matCellDef="let user">{{ user.name }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="email">
+      <th mat-header-cell *matHeaderCellDef>Email</th>
+      <td mat-cell *matCellDef="let user">{{ user.email }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="role">
+      <th mat-header-cell *matHeaderCellDef>Role</th>
+      <td mat-cell *matCellDef="let user">{{ user.role }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="status">
+      <th mat-header-cell *matHeaderCellDef>Status</th>
+      <td mat-cell *matCellDef="let user">
+        <mat-chip [class.chip-inactive]="!user.active" [class.chip-active]="user.active">
+          {{ user.active ? 'Active' : 'Deactivated' }}
+        </mat-chip>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="createdAt">
+      <th mat-header-cell *matHeaderCellDef>Joined</th>
+      <td mat-cell *matCellDef="let user">{{ user.createdAt | date: 'mediumDate' }}</td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr
+      mat-row
+      *matRowDef="let user; columns: displayedColumns"
+      class="user-row"
+      (click)="openUser(user.id)"
+    ></tr>
+  </table>
+
+  @if ((users$ | async)?.length === 0) {
+    <p class="empty-state">No users found</p>
+  }
+
+  <mat-paginator
+    [length]="totalElements$ | async"
+    [pageIndex]="page$ | async"
+    [pageSize]="size$ | async"
+    [pageSizeOptions]="[10, 31, 50, 100]"
+    (page)="onPage($event)"
+  ></mat-paginator>
+}

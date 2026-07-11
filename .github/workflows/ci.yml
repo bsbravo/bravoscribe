@@ -175,10 +175,10 @@ jobs:
           path: bravoscribe-acceptance-tests/target/cucumber-reports/
           retention-days: 7
 
-  # ── Frontend — build, lint, unit tests ──────────────────────────
+  # ── React Web App — build, lint, unit tests ─────────────────────
   # Independent of the backend — runs in parallel with everything else.
-  frontend-unit:
-    name: Frontend — build, lint, unit tests
+  react-unit:
+    name: React Web App — build, lint, unit tests
     runs-on: ubuntu-latest
 
     steps:
@@ -227,15 +227,17 @@ jobs:
         working-directory: frontend-react
         run: npm run build
 
-  # ── Frontend E2E ─────────────────────────────────────────────────
-  # Gated on acceptance-tests: no point spinning up a full docker-compose
-  # stack + browser if the backend's own tests already failed. Provisions a
-  # fresh, isolated stack for this job only — nothing shared with any other
-  # job (same isolation principle as the Testcontainers-based Java suites).
-  frontend-e2e:
-    name: Frontend — E2E (Playwright)
+  # ── React Web App — E2E ──────────────────────────────────────────
+  # Gated on acceptance-tests AND react-unit: no point spinning up a full
+  # docker-compose stack + browser if the backend's own tests already failed,
+  # or if the app doesn't even build/lint/pass its own unit tests yet.
+  # Provisions a fresh, isolated stack for this job only — nothing shared
+  # with any other job (same isolation principle as the Testcontainers-based
+  # Java suites).
+  react-e2e:
+    name: React Web App — E2E (Playwright)
     runs-on: ubuntu-latest
-    needs: [acceptance-tests]
+    needs: [acceptance-tests, react-unit]
 
     steps:
       - name: Checkout
@@ -334,6 +336,163 @@ jobs:
         with:
           name: playwright-report
           path: frontend-react/playwright-report/
+          retention-days: 7
+
+      - name: Tear down backend stack
+        if: always() && steps.check.outputs.exists == 'true'
+        working-directory: infra
+        run: docker compose --profile services down -v
+
+  # ── Angular Back-office — build + unit tests ────────────────────
+  # Independent of the backend — runs in parallel with everything else.
+  angular-unit:
+    name: Angular Back-office — build + unit tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Check if frontend-angular exists
+        id: check
+        run: |
+          if [ -f "frontend-angular/package.json" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set up Node 22
+        if: steps.check.outputs.exists == 'true'
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend-angular/package-lock.json
+
+      - name: Install dependencies
+        if: steps.check.outputs.exists == 'true'
+        working-directory: frontend-angular
+        run: npm ci
+
+      - name: Build
+        if: steps.check.outputs.exists == 'true'
+        working-directory: frontend-angular
+        run: npm run build
+
+      - name: Unit tests
+        if: steps.check.outputs.exists == 'true'
+        working-directory: frontend-angular
+        run: npm run test
+
+  # ── Angular Back-office — E2E ────────────────────────────────────
+  # Gated on acceptance-tests AND angular-unit — same reasoning as react-e2e:
+  # no point spinning up a full docker-compose stack + browser if the backend
+  # already failed, or the app doesn't even build/pass its own unit tests.
+  # Provisions a fresh, isolated stack for this job only.
+  angular-e2e:
+    name: Angular Back-office — E2E (Playwright)
+    runs-on: ubuntu-latest
+    needs: [acceptance-tests, angular-unit]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Check if frontend-angular and services exist
+        id: check
+        run: |
+          if [ -f "frontend-angular/package.json" ] && \
+             [ -f "services/user-service/pom.xml" ] && \
+             [ -f "services/journal-service/pom.xml" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate an ephemeral JWT keypair for this run
+        if: steps.check.outputs.exists == 'true'
+        run: |
+          openssl genrsa -out /tmp/private.pem 2048
+          openssl rsa -in /tmp/private.pem -pubout -out /tmp/public.pem
+
+          # GitHub only auto-masks registered Secrets, not GITHUB_ENV values — mask
+          # the private key line by line so it never appears in plaintext in logs
+          # (the workflow's own step-env debug dump would otherwise print it raw).
+          while IFS= read -r line; do
+            [ -n "$line" ] && echo "::add-mask::$line"
+          done < /tmp/private.pem
+
+          {
+            echo "JWT_PRIVATE_KEY<<PEMEOF"
+            cat /tmp/private.pem
+            echo "PEMEOF"
+            echo "JWT_PUBLIC_KEY<<PEMEOF"
+            cat /tmp/public.pem
+            echo "PEMEOF"
+          } >> "$GITHUB_ENV"
+
+      - name: Point nginx at the containerized services
+        if: steps.check.outputs.exists == 'true'
+        run: |
+          # See the identical step in react-e2e for the full explanation —
+          # container-to-container hairpin NAT isn't reliable on plain Linux
+          # Docker Engine, so use normal Compose service-name DNS in CI instead.
+          sed -i \
+            -e 's/host\.docker\.internal:8081/user-service:8081/' \
+            -e 's/host\.docker\.internal:8082/journal-service:8082/' \
+            -e 's/host\.docker\.internal:8083/notification-service:8083/' \
+            infra/nginx/nginx.conf
+
+      - name: Start backend stack
+        if: steps.check.outputs.exists == 'true'
+        working-directory: infra
+        run: >
+          docker compose --profile services up -d --build
+          postgres redis kafka zookeeper nginx user-service journal-service
+
+      - name: Wait for services to be healthy
+        if: steps.check.outputs.exists == 'true'
+        run: |
+          timeout 120 bash -c 'until curl -sf http://localhost:8081/actuator/health >/dev/null; do sleep 2; done'
+          timeout 120 bash -c 'until curl -sf http://localhost:8082/actuator/health >/dev/null; do sleep 2; done'
+          timeout 30 bash -c 'until curl -sf http://localhost:8080/health >/dev/null; do sleep 2; done'
+
+      - name: Set up Node 22
+        if: steps.check.outputs.exists == 'true'
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend-angular/package-lock.json
+
+      - name: Install frontend dependencies
+        if: steps.check.outputs.exists == 'true'
+        working-directory: frontend-angular
+        run: npm ci
+
+      - name: Install Playwright browsers
+        if: steps.check.outputs.exists == 'true'
+        working-directory: frontend-angular
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        if: steps.check.outputs.exists == 'true'
+        working-directory: frontend-angular
+        # Tests promote a freshly registered user to ADMIN by connecting to
+        # Postgres directly (no self-service admin-creation endpoint exists —
+        # see e2e/helpers.ts). Postgres's port is published to the runner host
+        # by the "Start backend stack" step above, same as the services.
+        env:
+          E2E_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/journal
+        run: npm run test:e2e
+
+      - name: Upload Playwright report
+        if: always() && steps.check.outputs.exists == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: angular-playwright-report
+          path: frontend-angular/playwright-report/
           retention-days: 7
 
       - name: Tear down backend stack

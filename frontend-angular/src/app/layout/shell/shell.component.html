@@ -1,0 +1,19 @@
+<mat-toolbar color="primary" class="toolbar">
+  <span class="brand">Bravoscribe Admin</span>
+
+  <nav class="nav-links">
+    <a mat-button routerLink="/dashboard" routerLinkActive="active-link">Dashboard</a>
+    <a mat-button routerLink="/users" routerLinkActive="active-link">Users</a>
+  </nav>
+
+  <span class="spacer"></span>
+
+  <button mat-button (click)="logout()" aria-label="Log out">
+    <mat-icon>logout</mat-icon>
+    Logout
+  </button>
+</mat-toolbar>
+
+<main class="content">
+  <router-outlet></router-outlet>
+</main>

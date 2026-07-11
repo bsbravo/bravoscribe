@@ -1,0 +1,40 @@
+.login-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 16px;
+  box-sizing: border-box;
+  background-color: var(--mat-sys-surface-container-low);
+}
+
+.login-card {
+  width: 100%;
+  max-width: 400px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.banner {
+  border-radius: 4px;
+  padding: 10px 12px;
+  margin-bottom: 16px;
+  font-size: 0.9rem;
+}
+
+.banner-info {
+  background-color: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+}
+
+.banner-error {
+  background-color: var(--mat-sys-error-container);
+  color: var(--mat-sys-on-error-container);
+}
+
+.inline-spinner {
+  display: inline-block;
+  vertical-align: middle;
+}
