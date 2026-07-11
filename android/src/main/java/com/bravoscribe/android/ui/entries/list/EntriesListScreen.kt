@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -39,7 +40,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,6 +53,7 @@ import com.bravoscribe.android.domain.model.JournalEntry
 import com.bravoscribe.android.domain.model.emoji
 import com.bravoscribe.android.ui.components.MoodColorBar
 import com.bravoscribe.android.ui.components.ShimmerEntryCard
+import com.bravoscribe.android.ui.export.ExportBottomSheet
 import com.bravoscribe.android.ui.util.displayTitle
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -64,6 +68,7 @@ fun EntriesListScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    var showExportSheet by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiState.snackbarMessage) {
         val message = uiState.snackbarMessage ?: return@LaunchedEffect
@@ -93,6 +98,9 @@ fun EntriesListScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = { showExportSheet = true }) {
+                        Icon(Icons.Default.FileDownload, contentDescription = "Export entries")
+                    }
                     IconButton(onClick = viewModel::toggleSearch) {
                         Icon(
                             if (uiState.searchExpanded) Icons.Default.Close else Icons.Default.Search,
@@ -144,6 +152,10 @@ fun EntriesListScreen(
                 }
             }
         }
+    }
+
+    if (showExportSheet) {
+        ExportBottomSheet(onDismiss = { showExportSheet = false })
     }
 }
 

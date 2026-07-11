@@ -12,12 +12,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Book
+import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -29,7 +31,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -39,6 +43,7 @@ import com.bravoscribe.android.ui.components.SaveStatusPill
 import com.bravoscribe.android.ui.components.StreakBar
 import com.bravoscribe.android.ui.components.StreakDay
 import com.bravoscribe.android.ui.components.TagChipsRow
+import com.bravoscribe.android.ui.export.ExportBottomSheet
 import java.time.format.DateTimeFormatter
 
 private val DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("EEEE, MMMM d yyyy")
@@ -48,6 +53,7 @@ private val DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("EEE
 fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    var showExportSheet by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiState.snackbarMessage) {
         uiState.snackbarMessage?.let {
@@ -61,6 +67,9 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
             TopAppBar(
                 title = { Text("Bravoscribe") },
                 actions = {
+                    IconButton(onClick = { showExportSheet = true }) {
+                        Icon(Icons.Default.FileDownload, contentDescription = "Export entries")
+                    }
                     if (uiState.isEditorOpen) {
                         SaveStatusPill(isSaved = uiState.isSaved, modifier = Modifier.padding(end = 16.dp))
                     }
@@ -88,6 +97,10 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
                 }
             }
         }
+    }
+
+    if (showExportSheet) {
+        ExportBottomSheet(onDismiss = { showExportSheet = false })
     }
 }
 
