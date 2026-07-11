@@ -10,8 +10,10 @@ object Routes {
 
     const val HOME = "home"
 
-    const val EDITOR = "editor/{entryId}"
-    fun editor(entryId: String) = "editor/$entryId"
+    // {date} is an ISO date (yyyy-MM-dd), not an entry id — a past day may not have
+    // an entry yet, and prev/next navigation must be able to land on an empty day.
+    const val EDITOR = "editor/{date}"
+    fun editor(date: String) = "editor/$date"
 
     const val ENTRIES = "entries"
 

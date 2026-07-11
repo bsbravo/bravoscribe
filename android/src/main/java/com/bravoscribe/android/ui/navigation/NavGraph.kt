@@ -63,10 +63,12 @@ fun BravoscribeNavHost(
         }
         composable(
             route = Routes.EDITOR,
-            arguments = listOf(navArgument("entryId") { type = NavType.StringType }),
-        ) { backStackEntry ->
-            val entryId = backStackEntry.arguments?.getString("entryId").orEmpty()
-            EditorScreen(entryId = entryId, onBack = { navController.popBackStack() })
+            arguments = listOf(navArgument("date") { type = NavType.StringType }),
+        ) {
+            EditorScreen(
+                onBack = { navController.popBackStack() },
+                onNavigateToDate = { date -> navController.navigate(Routes.editor(date)) },
+            )
         }
 
         composable(Routes.ENTRIES) {
@@ -79,7 +81,7 @@ fun BravoscribeNavHost(
             val entryId = backStackEntry.arguments?.getString("entryId").orEmpty()
             EntryDetailScreen(
                 entryId = entryId,
-                onEdit = { id -> navController.navigate(Routes.editor(id)) },
+                onEdit = { date -> navController.navigate(Routes.editor(date)) },
                 onBack = { navController.popBackStack() },
             )
         }
