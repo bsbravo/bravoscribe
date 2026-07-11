@@ -50,7 +50,7 @@ makes practical at a level previously reserved for large engineering teams.
 | 2 | User Service — auth, JWT, password reset | ✅ Done |
 | 3 | Journal Service — entries, tags, export | ✅ Done |
 | 4 | Notification Service — email via Kafka | ✅ Done |
-| 5 | React Web App | ⬜ Planned |
+| 5 | React Web App | ✅ Done |
 | 6 | Android App | ⬜ Planned |
 | 7 | Angular Back-office | ⬜ Planned |
 | 8 | Azure Cloud deploy | ⬜ Planned |

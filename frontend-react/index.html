@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <title>Bravoscribe</title>
+    <script>
+      // Apply saved theme before first paint to avoid a flash of the wrong theme.
+      try {
+        var raw = localStorage.getItem('bravoscribe-theme')
+        var theme = raw ? JSON.parse(raw).state.theme : 'warm'
+        if (theme === 'chronicle') document.documentElement.setAttribute('data-theme', 'chronicle')
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

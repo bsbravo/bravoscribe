@@ -174,3 +174,169 @@ jobs:
           name: acceptance-test-report
           path: bravoscribe-acceptance-tests/target/cucumber-reports/
           retention-days: 7
+
+  # ── Frontend — build, lint, unit tests ──────────────────────────
+  # Independent of the backend — runs in parallel with everything else.
+  frontend-unit:
+    name: Frontend — build, lint, unit tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Check if frontend exists
+        id: check
+        run: |
+          if [ -f "frontend-react/package.json" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set up Node 22
+        if: steps.check.outputs.exists == 'true'
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend-react/package-lock.json
+
+      - name: Install dependencies
+        if: steps.check.outputs.exists == 'true'
+        working-directory: frontend-react
+        run: npm ci
+
+      - name: Lint
+        if: steps.check.outputs.exists == 'true'
+        working-directory: frontend-react
+        run: npm run lint
+
+      - name: Typecheck E2E specs
+        if: steps.check.outputs.exists == 'true'
+        working-directory: frontend-react
+        run: npm run typecheck:e2e
+
+      - name: Unit tests
+        if: steps.check.outputs.exists == 'true'
+        working-directory: frontend-react
+        run: npm run test
+
+      - name: Build
+        if: steps.check.outputs.exists == 'true'
+        working-directory: frontend-react
+        run: npm run build
+
+  # ── Frontend E2E ─────────────────────────────────────────────────
+  # Gated on acceptance-tests: no point spinning up a full docker-compose
+  # stack + browser if the backend's own tests already failed. Provisions a
+  # fresh, isolated stack for this job only — nothing shared with any other
+  # job (same isolation principle as the Testcontainers-based Java suites).
+  frontend-e2e:
+    name: Frontend — E2E (Playwright)
+    runs-on: ubuntu-latest
+    needs: [acceptance-tests]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Check if frontend and services exist
+        id: check
+        run: |
+          if [ -f "frontend-react/package.json" ] && \
+             [ -f "services/user-service/pom.xml" ] && \
+             [ -f "services/journal-service/pom.xml" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate an ephemeral JWT keypair for this run
+        if: steps.check.outputs.exists == 'true'
+        run: |
+          openssl genrsa -out /tmp/private.pem 2048
+          openssl rsa -in /tmp/private.pem -pubout -out /tmp/public.pem
+
+          # GitHub only auto-masks registered Secrets, not GITHUB_ENV values — mask
+          # the private key line by line so it never appears in plaintext in logs
+          # (the workflow's own step-env debug dump would otherwise print it raw).
+          while IFS= read -r line; do
+            [ -n "$line" ] && echo "::add-mask::$line"
+          done < /tmp/private.pem
+
+          {
+            echo "JWT_PRIVATE_KEY<<PEMEOF"
+            cat /tmp/private.pem
+            echo "PEMEOF"
+            echo "JWT_PUBLIC_KEY<<PEMEOF"
+            cat /tmp/public.pem
+            echo "PEMEOF"
+          } >> "$GITHUB_ENV"
+
+      - name: Point nginx at the containerized services
+        if: steps.check.outputs.exists == 'true'
+        run: |
+          # nginx.conf targets host.docker.internal so it can reach the Spring Boot
+          # services when they run natively on a dev machine (see infra/nginx/nginx.conf
+          # for the full explanation). In this job they run as containers on the same
+          # Compose network as nginx instead, and container-to-container traffic looping
+          # back out through the host gateway ("hairpin NAT") isn't reliably supported on
+          # plain Linux Docker Engine (unlike Docker Desktop) — it 502'd on a real run.
+          # Patch this job's own checkout to use normal Compose service-name DNS instead,
+          # which is the reliable mechanism for this specific topology.
+          sed -i \
+            -e 's/host\.docker\.internal:8081/user-service:8081/' \
+            -e 's/host\.docker\.internal:8082/journal-service:8082/' \
+            -e 's/host\.docker\.internal:8083/notification-service:8083/' \
+            infra/nginx/nginx.conf
+
+      - name: Start backend stack
+        if: steps.check.outputs.exists == 'true'
+        working-directory: infra
+        run: >
+          docker compose --profile services up -d --build
+          postgres redis kafka zookeeper nginx user-service journal-service
+
+      - name: Wait for services to be healthy
+        if: steps.check.outputs.exists == 'true'
+        run: |
+          timeout 120 bash -c 'until curl -sf http://localhost:8081/actuator/health >/dev/null; do sleep 2; done'
+          timeout 120 bash -c 'until curl -sf http://localhost:8082/actuator/health >/dev/null; do sleep 2; done'
+          timeout 30 bash -c 'until curl -sf http://localhost:8080/health >/dev/null; do sleep 2; done'
+
+      - name: Set up Node 22
+        if: steps.check.outputs.exists == 'true'
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend-react/package-lock.json
+
+      - name: Install frontend dependencies
+        if: steps.check.outputs.exists == 'true'
+        working-directory: frontend-react
+        run: npm ci
+
+      - name: Install Playwright browsers
+        if: steps.check.outputs.exists == 'true'
+        working-directory: frontend-react
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        if: steps.check.outputs.exists == 'true'
+        working-directory: frontend-react
+        run: npm run test:e2e
+
+      - name: Upload Playwright report
+        if: always() && steps.check.outputs.exists == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: frontend-react/playwright-report/
+          retention-days: 7
+
+      - name: Tear down backend stack
+        if: always() && steps.check.outputs.exists == 'true'
+        working-directory: infra
+        run: docker compose --profile services down -v

@@ -28,8 +28,10 @@ local.properties
 build/
 
 # Secrets — never commit these
-*.pem                    # JWT private/public key files — NEVER commit
-*.zip                    # export zips, upload files — keep out of repo
+# JWT private/public key files — NEVER commit
+*.pem
+# export zips, upload files — keep out of repo
+*.zip
 *.env
 .env.*
 !.env.example
