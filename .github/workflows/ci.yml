@@ -125,10 +125,10 @@ jobs:
           path: services/notification-service/target/site/jacoco/
           retention-days: 7
 
-  # ── Acceptance Tests ────────────────────────────────────────────
+  # ── Backend Acceptance Tests ─────────────────────────────────────
   # Only runs when all 3 services are implemented (Phase 5+)
   acceptance-tests:
-    name: Acceptance Tests — cross-service
+    name: Backend Acceptance Tests — cross-service
     runs-on: ubuntu-latest
     needs: [user-service, journal-service, notification-service]
 
