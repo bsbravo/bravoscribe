@@ -57,6 +57,10 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            // Every junit-jupiter/junit-platform jar on the androidTest classpath
+            // bundles an identical copy of these — harmless to drop one at packaging time.
+            excludes += "/META-INF/LICENSE.md"
+            excludes += "/META-INF/LICENSE-notice.md"
         }
     }
 
