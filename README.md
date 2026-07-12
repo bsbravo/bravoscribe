@@ -51,7 +51,7 @@ makes practical at a level previously reserved for large engineering teams.
 | 3 | Journal Service — entries, tags, export | ✅ Done |
 | 4 | Notification Service — email via Kafka | ✅ Done |
 | 5 | React Web App | ✅ Done |
-| 6 | Android App | ⬜ Planned |
+| 6 | Android App | ✅ Done |
 | 7 | Angular Back-office | ✅ Done |
 | 8 | Azure Cloud deploy | ⬜ Planned |
 
