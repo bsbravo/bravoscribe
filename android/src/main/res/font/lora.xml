@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Variable font — declaring the same file at multiple weights lets Android
+     pick the right instance from its weight axis without manual FontVariation
+     settings. -->
+<font-family xmlns:android="http://schemas.android.com/apk/res/android">
+    <font
+        android:font="@font/lora_variable"
+        android:fontStyle="normal"
+        android:fontWeight="400" />
+    <font
+        android:font="@font/lora_variable"
+        android:fontStyle="normal"
+        android:fontWeight="500" />
+    <font
+        android:font="@font/lora_variable_italic"
+        android:fontStyle="italic"
+        android:fontWeight="400" />
+</font-family>

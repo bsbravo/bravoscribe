@@ -125,10 +125,10 @@ jobs:
           path: services/notification-service/target/site/jacoco/
           retention-days: 7
 
-  # ── Acceptance Tests ────────────────────────────────────────────
+  # ── Backend Acceptance Tests ─────────────────────────────────────
   # Only runs when all 3 services are implemented (Phase 5+)
   acceptance-tests:
-    name: Acceptance Tests — cross-service
+    name: Backend Acceptance Tests — cross-service
     runs-on: ubuntu-latest
     needs: [user-service, journal-service, notification-service]
 
@@ -493,6 +493,174 @@ jobs:
         with:
           name: angular-playwright-report
           path: frontend-angular/playwright-report/
+          retention-days: 7
+
+      - name: Tear down backend stack
+        if: always() && steps.check.outputs.exists == 'true'
+        working-directory: infra
+        run: docker compose --profile services down -v
+
+  # ── Android App — build + unit tests ─────────────────────────────
+  # Independent of the backend — runs in parallel with everything else.
+  android-unit:
+    name: Android App — build + unit tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Check if android app exists
+        id: check
+        run: |
+          if [ -f "android/build.gradle.kts" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set up JDK 17
+        if: steps.check.outputs.exists == 'true'
+        uses: actions/setup-java@v5
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Set up Gradle
+        if: steps.check.outputs.exists == 'true'
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build
+        if: steps.check.outputs.exists == 'true'
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Unit tests
+        if: steps.check.outputs.exists == 'true'
+        working-directory: android
+        run: ./gradlew test --no-daemon
+
+      - name: Upload unit test reports
+        if: always() && steps.check.outputs.exists == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: android-unit-test-report
+          path: android/build/reports/tests/
+          retention-days: 7
+
+  # ── Android App — E2E (instrumented, emulator) ───────────────────
+  # Gated on acceptance-tests AND android-unit — same reasoning as react-e2e/
+  # angular-e2e: no point booting an emulator + full docker-compose stack if
+  # the backend already failed, or the app doesn't even build/pass its own
+  # unit tests. Unlike the web E2E jobs, this needs hardware-accelerated
+  # emulation (KVM) rather than a browser. The emulator runs directly on the
+  # runner (not in Docker) and reaches the backend via 10.0.2.2 — the
+  # standard Android-emulator alias for the host loopback — which is why the
+  # network_security_config.xml cleartext exception already covers it.
+  android-e2e:
+    name: Android App — E2E (instrumented, emulator)
+    runs-on: ubuntu-latest
+    needs: [acceptance-tests, android-unit]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Check if android app and services exist
+        id: check
+        run: |
+          if [ -f "android/build.gradle.kts" ] && \
+             [ -f "services/user-service/pom.xml" ] && \
+             [ -f "services/journal-service/pom.xml" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate an ephemeral JWT keypair for this run
+        if: steps.check.outputs.exists == 'true'
+        run: |
+          openssl genrsa -out /tmp/private.pem 2048
+          openssl rsa -in /tmp/private.pem -pubout -out /tmp/public.pem
+
+          # GitHub only auto-masks registered Secrets, not GITHUB_ENV values — mask
+          # the private key line by line so it never appears in plaintext in logs
+          # (the workflow's own step-env debug dump would otherwise print it raw).
+          while IFS= read -r line; do
+            [ -n "$line" ] && echo "::add-mask::$line"
+          done < /tmp/private.pem
+
+          {
+            echo "JWT_PRIVATE_KEY<<PEMEOF"
+            cat /tmp/private.pem
+            echo "PEMEOF"
+            echo "JWT_PUBLIC_KEY<<PEMEOF"
+            cat /tmp/public.pem
+            echo "PEMEOF"
+          } >> "$GITHUB_ENV"
+
+      - name: Point nginx at the containerized services
+        if: steps.check.outputs.exists == 'true'
+        run: |
+          # See the identical step in react-e2e for the full explanation —
+          # container-to-container hairpin NAT isn't reliable on plain Linux
+          # Docker Engine, so use normal Compose service-name DNS in CI instead.
+          # (This is about nginx's own container reaching the service containers —
+          # unrelated to how the emulator itself reaches nginx via 10.0.2.2.)
+          sed -i \
+            -e 's/host\.docker\.internal:8081/user-service:8081/' \
+            -e 's/host\.docker\.internal:8082/journal-service:8082/' \
+            -e 's/host\.docker\.internal:8083/notification-service:8083/' \
+            infra/nginx/nginx.conf
+
+      - name: Start backend stack
+        if: steps.check.outputs.exists == 'true'
+        working-directory: infra
+        run: >
+          docker compose --profile services up -d --build
+          postgres redis kafka zookeeper nginx user-service journal-service
+
+      - name: Wait for services to be healthy
+        if: steps.check.outputs.exists == 'true'
+        run: |
+          timeout 120 bash -c 'until curl -sf http://localhost:8081/actuator/health >/dev/null; do sleep 2; done'
+          timeout 120 bash -c 'until curl -sf http://localhost:8082/actuator/health >/dev/null; do sleep 2; done'
+          timeout 30 bash -c 'until curl -sf http://localhost:8080/health >/dev/null; do sleep 2; done'
+
+      - name: Set up JDK 17
+        if: steps.check.outputs.exists == 'true'
+        uses: actions/setup-java@v5
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Set up Gradle
+        if: steps.check.outputs.exists == 'true'
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Enable KVM group perms
+        if: steps.check.outputs.exists == 'true'
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Run instrumented tests on emulator
+        if: steps.check.outputs.exists == 'true'
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          target: google_apis
+          arch: x86_64
+          disable-animations: true
+          script: cd android && ./gradlew connectedDebugAndroidTest --no-daemon
+
+      - name: Upload instrumented test reports
+        if: always() && steps.check.outputs.exists == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: android-instrumented-test-report
+          path: android/build/reports/androidTests/
           retention-days: 7
 
       - name: Tear down backend stack

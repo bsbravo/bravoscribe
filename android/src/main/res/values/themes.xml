@@ -1,0 +1,5 @@
+<resources>
+    <!-- Compose owns all UI theming (see ui/theme/Theme.kt) — this is only the
+         manifest-required launch theme, kept minimal with no action bar. -->
+    <style name="Theme.Bravoscribe" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>

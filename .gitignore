@@ -26,6 +26,7 @@ dist/
 local.properties
 .gradle/
 build/
+!android/gradle/wrapper/gradle-wrapper.jar
 
 # Secrets — never commit these
 # JWT private/public key files — NEVER commit
