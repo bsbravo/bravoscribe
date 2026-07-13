@@ -528,7 +528,7 @@ jobs:
 
       - name: Set up Gradle
         if: steps.check.outputs.exists == 'true'
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Build
         if: steps.check.outputs.exists == 'true'
@@ -636,7 +636,7 @@ jobs:
 
       - name: Set up Gradle
         if: steps.check.outputs.exists == 'true'
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Enable KVM group perms
         if: steps.check.outputs.exists == 'true'
