@@ -17,7 +17,7 @@
         <junit-jupiter.version>5.14.2</junit-jupiter.version>
         <nimbus-jose-jwt.version>10.9</nimbus-jose-jwt.version>
         <assertj.version>3.27.7</assertj.version>
-        <awaitility.version>4.2.2</awaitility.version>
+        <awaitility.version>4.3.0</awaitility.version>
         <mongodb-driver.version>5.8.0</mongodb-driver.version>
         <postgresql.version>42.7.12</postgresql.version>
         <jackson.version>2.22.1</jackson.version>
