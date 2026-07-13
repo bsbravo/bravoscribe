@@ -196,7 +196,7 @@ jobs:
 
       - name: Set up Node 22
         if: steps.check.outputs.exists == 'true'
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: '22'
           cache: npm
@@ -309,7 +309,7 @@ jobs:
 
       - name: Set up Node 22
         if: steps.check.outputs.exists == 'true'
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: '22'
           cache: npm
@@ -364,7 +364,7 @@ jobs:
 
       - name: Set up Node 22
         if: steps.check.outputs.exists == 'true'
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: '22'
           cache: npm
@@ -460,7 +460,7 @@ jobs:
 
       - name: Set up Node 22
         if: steps.check.outputs.exists == 'true'
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: '22'
           cache: npm
