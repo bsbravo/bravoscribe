@@ -11,7 +11,7 @@
     <properties>
         <java.version>25</java.version>
         <cucumber.version>7.34.4</cucumber.version>
-        <rest-assured.version>6.0.0</rest-assured.version>
+        <rest-assured.version>6.0.1</rest-assured.version>
         <testcontainers.version>1.21.4</testcontainers.version>
         <junit-platform.version>1.14.2</junit-platform.version>
         <junit-jupiter.version>5.14.2</junit-jupiter.version>
