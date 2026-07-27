@@ -34,7 +34,7 @@
     "@angular/cli": "^22.0.6",
     "@angular/compiler-cli": "^22.0.0",
     "@angular/platform-browser-dynamic": "^22.0.6",
-    "@playwright/test": "^1.61.1",
+    "@playwright/test": "^1.62.0",
     "@testing-library/angular": "^19.4.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@types/jest": "^30.0.0",
