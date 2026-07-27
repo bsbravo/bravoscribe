@@ -32,7 +32,7 @@
   "devDependencies": {
     "@angular/build": "^22.0.7",
     "@angular/cli": "^22.0.6",
-    "@angular/compiler-cli": "^22.0.0",
+    "@angular/compiler-cli": "^22.0.8",
     "@angular/platform-browser-dynamic": "^22.0.6",
     "@playwright/test": "^1.61.1",
     "@testing-library/angular": "^19.4.1",
