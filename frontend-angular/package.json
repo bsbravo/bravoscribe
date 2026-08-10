@@ -36,7 +36,7 @@
     "@angular/platform-browser-dynamic": "^22.0.6",
     "@playwright/test": "^1.62.0",
     "@testing-library/angular": "^19.4.1",
-    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/jest-dom": "^7.0.0",
     "@types/jest": "^30.0.0",
     "@types/pg": "^8.20.0",
     "jest": "^30.4.2",
